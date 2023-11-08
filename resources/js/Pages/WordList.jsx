@@ -11,10 +11,9 @@ import {InputOptionsList} from "@/Components/InputOptionsList.jsx";
 import {appStyles} from "@/Styles/app.js";
 import {predictWordByPrefix} from "@/Services/Predictor.js";
 import {SelectInput} from "@/Components/UI/SelectInput";
-import {EN_LANG, LANGUAGES, LANGUAGES_INFO, UK_LANG} from "@/constants.js";
+import {EN_LANG, LANGUAGES, LANGUAGES_INFO, NL_LANG, UK_LANG} from "@/constants.js";
+import {routes} from "@/API/routes.js";
 
-const API_KEY = 'AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw';
-const API_URL = 'https://translation.googleapis.com/language/translate/v3';
 const DEFAULT_REQUEST_DELAY = 500
 
 export default function WordList({auth, words}) {
@@ -29,39 +28,64 @@ export default function WordList({auth, words}) {
     const [predicts, setPredicts] = useState([])
     const [showPredicts, setShowPredicts] = useState(false);
     const [showTranslationOptions, setShowTranslationOptions] = useState(false);
-    const [valueLang, setValueLang] = useState(EN_LANG);
-    const [translationLang, setTranslationLang] = useState(UK_LANG);
+    const [valueLang, setValueLang] = useState({
+        pin: EN_LANG,
+        list: LANGUAGES.filter(l => l !== NL_LANG)
+    });
+    const [translationLang, setTranslationLang] = useState({
+        pin: NL_LANG,
+        list: LANGUAGES.filter(l => l !== EN_LANG)
+    });
 
     useEffect(() => {
         if (data.value.length > 1 && inputInFocus === translateInput) {
-            const delayDebounceFn = setTimeout(async () => {
-                let translateOptions = await translateText(data.value, valueLang, translationLang)
-                setTranslations(translateOptions)
-                setShowTranslationOptions(true)
-            }, DEFAULT_REQUEST_DELAY)
-
-            return () => clearTimeout(delayDebounceFn)
+            predictValue()
         }
         if (data.value.length > 1 && inputInFocus === valueInput) {
-            const delayDebounceFn = setTimeout(async () => {
-                let translateOptions = await predictWordByPrefix(data.value, valueLang)
-                setPredicts(translateOptions)
-                setShowPredicts(true)
-            }, DEFAULT_REQUEST_DELAY)
-
-            return () => clearTimeout(delayDebounceFn)
+            predictTranslate()
         }
     }, [data.value, inputInFocus])
 
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('words.store'));
+        post(route(routes.words.store));
     };
 
     const deleteWord = (id) => {
-        deleteWordAction(route('words.destroy', {id: id}));
+        deleteWordAction(route(routes.words.destroy, {id: id}));
     };
+
+    // TODO try to play with state do to it in state consts
+    const setValueLangAction = (lang) => {
+        setValueLang({...valueLang, tip: lang})
+        setTranslationLang({...translationLang, list: LANGUAGES.filter(l => l !== lang)})
+    }
+
+    const setTranslationLangAction = (lang) => {
+        setTranslationLang({...translationLang, tip: lang})
+        setValueLang({...valueLang, list: LANGUAGES.filter(l => l !== lang)})
+    }
+
+    const predictValue = () => {
+        const delayDebounceFn = setTimeout(async () => {
+            let translateOptions = await translateText(data.value, valueLang, translationLang)
+            setTranslations(translateOptions)
+            setShowTranslationOptions(true)
+        }, DEFAULT_REQUEST_DELAY)
+
+        return () => clearTimeout(delayDebounceFn)
+    }
+
+    const predictTranslate = () => {
+        const delayDebounceFn = setTimeout(async () => {
+            let translateOptions = await predictWordByPrefix(data.value, valueLang)
+            setPredicts(translateOptions)
+            setShowPredicts(true)
+        }, DEFAULT_REQUEST_DELAY)
+
+        return () => clearTimeout(delayDebounceFn)
+    }
 
     return (
         <AuthenticatedLayout
@@ -82,7 +106,7 @@ export default function WordList({auth, words}) {
                                 onFocus={() => setInputInFocus(valueInput)}
                                 onChange={(e) => setData('value', e.target.value)}
                             />
-                            <InputError message={errors.value} />
+                            <InputError message={errors.value}/>
                             <InputOptionsList
                                 name="value"
                                 setData={setData}
@@ -92,7 +116,11 @@ export default function WordList({auth, words}) {
                                 setIsShow={setShowPredicts}
                                 setInputInFocus={setInputInFocus}
                             />
-                            <SelectInput options={LANGUAGES} onChange={setValueLang} selected={valueLang}/>
+                            <SelectInput
+                                options={valueLang.list}
+                                onChange={setValueLangAction}
+                                selected={valueLang.pin}
+                            />
                         </div>
                         <div style={appStyles.column}>
                             <InputLabel htmlFor="translation" value="Translation"/>
@@ -105,7 +133,7 @@ export default function WordList({auth, words}) {
                                 onFocus={() => setInputInFocus(translateInput)}
                                 onChange={(e) => setData('translation', e.target.value)}
                             />
-                            <InputError message={errors.value} />
+                            <InputError message={errors.value}/>
                             <InputOptionsList
                                 name="translation"
                                 setData={setData}
@@ -115,7 +143,11 @@ export default function WordList({auth, words}) {
                                 setIsShow={setShowTranslationOptions}
                                 setInputInFocus={setInputInFocus}
                             />
-                            <SelectInput options={LANGUAGES} onChange={setTranslationLang} selected={translationLang}/>
+                            <SelectInput
+                                options={translationLang.list}
+                                onChange={setTranslationLangAction}
+                                selected={translationLang.pin}
+                            />
                         </div>
                     </div>
                     <div className="flex items-center justify-end mt-4">
