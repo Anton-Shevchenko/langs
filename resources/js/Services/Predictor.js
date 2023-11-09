@@ -1,8 +1,5 @@
 import {EN_LANG, NL_LANG} from "@/constants.js";
 
-const maxCount = 5
-const vocab = 100
-
 const localServiceLanguage = [
     NL_LANG,
 ]
@@ -17,7 +14,6 @@ export const predictWordByPrefix = async (prefix, lang) => {
         )
 
         let json = await response.json()
-        console.log(json)
 
         return json?.results.map(predict => predict['text'] ?? "")
     }

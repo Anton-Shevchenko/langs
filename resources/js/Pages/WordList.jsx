@@ -18,10 +18,11 @@ import Pagination from "@/Components/UI/Pagination";
 const DEFAULT_REQUEST_DELAY = 500
 
 export default function WordList({auth, words}) {
-    const {data, setData, post, processing, errors, delete: deleteWordAction} = useForm({
+    const initData = {
         value: '',
         translation: '',
-    });
+    }
+    const {data, setData, post, processing, errors, delete: deleteWordAction} = useForm(initData);
     const [translations, setTranslations] = useState([])
     const valueInput = 'value'
     const translateInput = 'translate'
@@ -29,15 +30,8 @@ export default function WordList({auth, words}) {
     const [predicts, setPredicts] = useState([])
     const [showPredicts, setShowPredicts] = useState(false);
     const [showTranslationOptions, setShowTranslationOptions] = useState(false);
-    const [valueLang, setValueLang] = useState({
-        pin: EN_LANG,
-        list: LANGUAGES.filter(l => l !== NL_LANG)
-    });
-    const [translationLang, setTranslationLang] = useState({
-        pin: NL_LANG,
-        list: LANGUAGES.filter(l => l !== EN_LANG)
-    });
-    console.log(words)
+    const [valueLang, setValueLang] = useState(EN_LANG);
+    const [translationLang, setTranslationLang] = useState(NL_LANG);
 
     useEffect(() => {
         if (data.value.length > 1 && inputInFocus === translateInput) {
@@ -49,30 +43,31 @@ export default function WordList({auth, words}) {
     }, [data.value, inputInFocus])
 
     const submit = (e) => {
-        console.log(e);
-        e.preventDefault();
-
+        data.value_lang = valueLang
+        data.translation_lang = translationLang
+        e.preventDefault()
         post(route(routes.words.store));
+        setData(initData)
     };
 
     const deleteWord = (id) => {
         deleteWordAction(route(routes.words.destroy, {id: id}));
     };
 
-    // TODO try to play with state do to it in state consts
     const setValueLangAction = (lang) => {
-        setValueLang({...valueLang, tip: lang})
-        setTranslationLang({...translationLang, list: LANGUAGES.filter(l => l !== lang)})
+        setValueLang(lang)
+        setTranslationLang(LANGUAGES.filter(l => l !== lang)[0])
+        setData(initData)
     }
 
     const setTranslationLangAction = (lang) => {
-        setTranslationLang({...translationLang, tip: lang})
-        setValueLang({...valueLang, list: LANGUAGES.filter(l => l !== lang)})
+        setTranslationLang(lang)
+        setValueLang(LANGUAGES.filter(l => l !== lang)[0])
     }
 
     const predictValue = () => {
         const delayDebounceFn = setTimeout(async () => {
-            let translateOptions = await translateText(data.value, valueLang.pin, translationLang.pin)
+            let translateOptions = await translateText(data.value, valueLang, translationLang)
             setTranslations(translateOptions)
             setShowTranslationOptions(true)
         }, DEFAULT_REQUEST_DELAY)
@@ -82,7 +77,7 @@ export default function WordList({auth, words}) {
 
     const predictTranslate = () => {
         const delayDebounceFn = setTimeout(async () => {
-            let translateOptions = await predictWordByPrefix(data.value, valueLang.pin)
+            let translateOptions = await predictWordByPrefix(data.value, valueLang)
             setPredicts(translateOptions)
             setShowPredicts(true)
         }, DEFAULT_REQUEST_DELAY)
@@ -97,9 +92,10 @@ export default function WordList({auth, words}) {
             <div style={style.container} className="max-w-6xl mx-auto sm:px-6 lg:px-6">
                 <form onSubmit={submit}>
                     <div style={appStyles.row}>
-                        <div style={appStyles.column}>
+                        <div className="ml-4" style={appStyles.column}>
                             <InputLabel htmlFor="value" value="Value"/>
                             <TextInput
+                                style={style.input}
                                 id="value"
                                 type="text"
                                 name="value"
@@ -119,14 +115,15 @@ export default function WordList({auth, words}) {
                                 setInputInFocus={setInputInFocus}
                             />
                             <SelectInput
-                                options={valueLang.list}
+                                options={LANGUAGES}
                                 onChange={setValueLangAction}
-                                selected={valueLang.pin}
+                                selected={valueLang}
                             />
                         </div>
-                        <div style={appStyles.column}>
+                        <div className="ml-4" style={appStyles.column}>
                             <InputLabel htmlFor="translation" value="Translation"/>
                             <TextInput
+                                style={style.input}
                                 id="translation"
                                 type="text"
                                 name="translation"
@@ -135,7 +132,7 @@ export default function WordList({auth, words}) {
                                 onFocus={() => setInputInFocus(translateInput)}
                                 onChange={(e) => setData('translation', e.target.value)}
                             />
-                            <InputError message={errors.value}/>
+                            <InputError message={errors.translation}/>
                             <InputOptionsList
                                 name="translation"
                                 setData={setData}
@@ -146,16 +143,17 @@ export default function WordList({auth, words}) {
                                 setInputInFocus={setInputInFocus}
                             />
                             <SelectInput
-                                options={translationLang.list}
+                                options={LANGUAGES.filter(l => l !== valueLang)}
                                 onChange={setTranslationLangAction}
-                                selected={translationLang.pin}
+                                selected={translationLang}
                             />
                         </div>
-                    </div>
-                    <div className="flex items-center justify-end mt-4">
-                        <PrimaryButton className="ml-4" disabled={processing}>
-                            Create
-                        </PrimaryButton>
+                        <div style={appStyles.column}>
+                            {/*TODO make design*/}
+                            <PrimaryButton style={{marginTop: 27, marginLeft: 60}} className="ml-4" disabled={processing}>
+                                Create
+                            </PrimaryButton>
+                        </div>
                     </div>
                 </form>
                 <WordTable words={words.data} deleteWordAction={deleteWord}/>
@@ -168,5 +166,9 @@ export default function WordList({auth, words}) {
 const style = {
     container: {
         marginTop: 20,
-    }
+    },
+    input: {
+        width: 450,
+        alignSelf: "center",
+    },
 }

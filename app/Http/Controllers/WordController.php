@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Contracts\Repositories\WordRepositoryInterface;
 use App\Contracts\Services\WordServiceInterface;
 use App\Http\Requests\StoreWordRequest;
-use App\Http\Requests\UpdateWordRequest;
 use App\Models\Word;
 use Inertia\Inertia;
 
@@ -31,17 +30,7 @@ class WordController extends Controller
 
     public function store(StoreWordRequest $request)
     {
-        $request->validate([
-            'value' => 'required|max:255',
-        ]);
-
-        Word::create([
-            'value' => $request['value'],
-            'user_id' => auth()->id(),
-            'value_lang' => 'ru',
-            'translation_lang' => 'ru',
-            'translation' => $request['translation'],
-        ]);
+        Word::create([...$request->validated(), 'user_id' => auth()->id()]);
 
         return redirect()->route('words.index')
             ->with('success', 'Word created successfully.');

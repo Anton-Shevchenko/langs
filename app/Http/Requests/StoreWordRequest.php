@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Langs;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreWordRequest extends FormRequest
 {
@@ -22,7 +24,10 @@ class StoreWordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'value' => 'required|max:255',
+            'value' => 'required|max:100',
+            'value_lang' => [Rule::enum(Langs::class)],
+            'translation' => 'required|max:100',
+            'translation_lang' => [Rule::enum(Langs::class)],
         ];
     }
 }

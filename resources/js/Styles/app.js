@@ -13,5 +13,6 @@ export const Colors = {
     white: "#ffffff",
     cream: "#d2eae7",
     creamHover: "#e0ece9",
-    strongGrey: "#414141",
+    strongGrey: "#5e5e5e",
+    error: "#f38080",
 }

@@ -1,4 +1,25 @@
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
+import {Colors} from "@/Styles/app.js";
+
+export const WordTable = ({words, deleteWordAction}) => {
+    return (
+        <div style={style.container}>
+            {words.map((word, key) =>
+            <div key={word.id} style={key % 2 ? style.rowGrey : style.rowWhite}>
+                <div style={style.value}>
+                    {word.value}
+                </div>
+                <div style={style.value}>
+                    {word.translation}
+                </div>
+                <div style={style.actions}>
+                    <SecondaryButton onClick={() => deleteWordAction(word.id)}>Delete</SecondaryButton>
+                </div>
+            </div>
+            )}
+        </div>
+    )
+}
 
 const rowStyle = {
     display: 'flex',
@@ -7,9 +28,11 @@ const rowStyle = {
 const style = {
     container: {
         marginTop: 20,
+        fontWeight: "bold",
+        color: Colors.strongGrey,
     },
     rowGrey: {
-       ...rowStyle,
+        ...rowStyle,
     },
     rowWhite: {
         ...rowStyle,
@@ -22,22 +45,5 @@ const style = {
         marginRight: 0,
     }
 };
-
-export const WordTable = ({words, deleteWordAction}) => {
-    return (
-        <div style={style.container}>
-            {words.map((word, key) =>
-            <div key={word.id} style={key % 2 ? style.rowGrey : style.rowWhite}>
-                <div style={style.value}>
-                    {word.value}
-                </div>
-                <div style={style.actions}>
-                    <SecondaryButton onClick={() => deleteWordAction(word.id)}>Delete</SecondaryButton>
-                </div>
-            </div>
-            )}
-        </div>
-    )
-}
 
 

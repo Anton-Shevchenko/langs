@@ -8,17 +8,17 @@ use App\Contracts\Repositories\WordRepositoryInterface;
 use App\Contracts\Services\WordServiceInterface;
 use App\Models\Word;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Arr;
 
 class WordService implements WordServiceInterface
 {
-    const DEFAULT_QUESTIONS_COUNT_PER_TEST = 4;
+    const DEFAULT_QUESTIONS_COUNT_PER_TEST = 6;
     const DEFAULT_ANSWERS_COUNT_PER_QUESTION = 4;
 
     public function __construct(public WordRepositoryInterface $wordRepository) {}
 
     public function getTestByUserId(int $userId): array
     {
+        // count limited for simplifying the test with the same options
         return $this->buildTest($this->wordRepository->getRandomWordsByUserIdAndCount(
             $userId,
             self::DEFAULT_QUESTIONS_COUNT_PER_TEST * self::DEFAULT_ANSWERS_COUNT_PER_QUESTION
@@ -27,19 +27,32 @@ class WordService implements WordServiceInterface
 
     private function buildTest(Collection $collection): array
     {
-        $test = [];
-        $chunks = array_chunk($collection->toArray(), self::DEFAULT_ANSWERS_COUNT_PER_QUESTION);
+        if ($collection->count() <= 1) {
+            return [];
+        }
 
-        foreach ($chunks as $chunk) {
-            if (count($chunk) < self::DEFAULT_ANSWERS_COUNT_PER_QUESTION) {
-                break;
-            }
-            $questionIndex = array_rand($chunk);
-            $question = $chunk[$questionIndex];
-            $question['options'] = Arr::pluck($chunk, 'translation');
-            $test[] = $question;
+        $test = [];
+        $questions = $collection->random(self::DEFAULT_QUESTIONS_COUNT_PER_TEST);
+
+        foreach ($questions as $question) {
+            $test[] = $this->fillTest($collection, $question);
         }
 
         return $test;
+    }
+
+    private function fillTest(Collection $collection, Word $question): Word
+    {
+        $attr = $question->getAttribute('translation');
+        $translates = $collection->pluck('translation');
+
+        $checked = $translates->filter(function (string $value) use ($attr) {
+            return $value !== $attr;
+        });
+
+        $options = $checked->random(self::DEFAULT_ANSWERS_COUNT_PER_QUESTION - 1);
+        $question['options'] = $options->add($attr)->shuffle();
+
+        return $question;
     }
 }
