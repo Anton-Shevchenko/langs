@@ -11,8 +11,9 @@ import {InputOptionsList} from "@/Components/InputOptionsList.jsx";
 import {appStyles} from "@/Styles/app.js";
 import {predictWordByPrefix} from "@/Services/Predictor.js";
 import {SelectInput} from "@/Components/UI/SelectInput";
-import {EN_LANG, LANGUAGES, LANGUAGES_INFO, NL_LANG, UK_LANG} from "@/constants.js";
+import {EN_LANG, LANGUAGES, NL_LANG} from "@/constants.js";
 import {routes} from "@/API/routes.js";
+import Pagination from "@/Components/UI/Pagination";
 
 const DEFAULT_REQUEST_DELAY = 500
 
@@ -36,6 +37,7 @@ export default function WordList({auth, words}) {
         pin: NL_LANG,
         list: LANGUAGES.filter(l => l !== EN_LANG)
     });
+    console.log(words)
 
     useEffect(() => {
         if (data.value.length > 1 && inputInFocus === translateInput) {
@@ -47,6 +49,7 @@ export default function WordList({auth, words}) {
     }, [data.value, inputInFocus])
 
     const submit = (e) => {
+        console.log(e);
         e.preventDefault();
 
         post(route(routes.words.store));
@@ -69,7 +72,7 @@ export default function WordList({auth, words}) {
 
     const predictValue = () => {
         const delayDebounceFn = setTimeout(async () => {
-            let translateOptions = await translateText(data.value, valueLang, translationLang)
+            let translateOptions = await translateText(data.value, valueLang.pin, translationLang.pin)
             setTranslations(translateOptions)
             setShowTranslationOptions(true)
         }, DEFAULT_REQUEST_DELAY)
@@ -79,7 +82,7 @@ export default function WordList({auth, words}) {
 
     const predictTranslate = () => {
         const delayDebounceFn = setTimeout(async () => {
-            let translateOptions = await predictWordByPrefix(data.value, valueLang)
+            let translateOptions = await predictWordByPrefix(data.value, valueLang.pin)
             setPredicts(translateOptions)
             setShowPredicts(true)
         }, DEFAULT_REQUEST_DELAY)
@@ -90,9 +93,8 @@ export default function WordList({auth, words}) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Profile</h2>}
         >
-            <div className="max-w-6xl mx-auto sm:px-6 lg:px-6">
+            <div style={style.container} className="max-w-6xl mx-auto sm:px-6 lg:px-6">
                 <form onSubmit={submit}>
                     <div style={appStyles.row}>
                         <div style={appStyles.column}>
@@ -156,8 +158,15 @@ export default function WordList({auth, words}) {
                         </PrimaryButton>
                     </div>
                 </form>
-                <WordTable words={words} deleteWordAction={deleteWord}/>
+                <WordTable words={words.data} deleteWordAction={deleteWord}/>
+                <Pagination links={words.links} />
             </div>
         </AuthenticatedLayout>
     )
+}
+
+const style = {
+    container: {
+        marginTop: 20,
+    }
 }

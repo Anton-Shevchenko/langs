@@ -36,7 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('words', WordController::class);
+    Route::resource('words', WordController::class)->only(['store', 'destroy', 'index']);
+    Route::get('/words/tests', [WordController::class, 'test'])->name('words.test');
 
     Route::get('/predict/{lang}/{substr}', [PredictController::class, 'index'])->name('predict.index');
 });

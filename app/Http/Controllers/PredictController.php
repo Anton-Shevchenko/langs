@@ -2,28 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PredictDutch;
+use App\Enums\Langs;
+use App\Services\PredictService;
 
 class PredictController extends Controller
 {
-    private const NL_LANG = "nl";
-    private const UK_LANG = "uk";
+    public function __construct(protected PredictService $predictService) {}
 
-    public function index(string $lang, string $prefix)
+    public function index(Langs $lang, string $prefix)
     {
-
-        switch ($lang) {
-            case self::NL_LANG:
-                $langModel = new PredictDutch;
-                break;
-            case self::UK_LANG:
-                $langModel = new PredictDutch;
-                break;
-            default:
-                return [];
-        }
-
-        //TODO to repository
-        return $langModel::where("word", "like", "$prefix%")->limit(5)->get();
+        return $this->predictService->getPredictOptionsByPrefix($prefix, $lang);
     }
 }

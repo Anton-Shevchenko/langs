@@ -1,4 +1,5 @@
 import {useEffect, useRef} from "react";
+import {Colors} from "@/Styles/app.js";
 
 export const InputOptionsList = ({name, options, setData, onClickOutside, isShow, setIsShow, setInputInFocus}) => {
     const selectOption = (option) => {
@@ -43,10 +44,14 @@ const style = {
     },
     list: {
         width: "100%",
-        backgroundColor: "grey",
+        backgroundColor: Colors.white,
         position: "absolute"
     },
     option: {
-
+        padding: 5,
+        borderBottom: "1px solid rgb(212, 212, 212)",
+    },
+    "option:hover": {
+        backgroundColor: "red",
     }
 }

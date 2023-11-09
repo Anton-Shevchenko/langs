@@ -20,6 +20,8 @@
         "vite": "^4.0.0"
     },
     "dependencies": {
-        "@vitalets/google-translate-api": "^9.2.0"
+        "@inertiajs/inertia-react": "^0.8.1",
+        "@vitalets/google-translate-api": "^9.2.0",
+        "react-paginate": "^8.2.0"
     }
 }
